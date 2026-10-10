@@ -3,6 +3,8 @@
 Borrower portal plus an operations dashboard for a small lending flow:
 **apply → sanction → disburse → collect → auto-close**.
 
+**Live demo:** https://lms-creditsea-web.vercel.app (API: https://lms-creditsea-api.vercel.app/api/health). Log in with any account from [Login credentials](#login-credentials).
+
 | Layer    | Stack                                                  |
 | -------- | ------------------------------------------------------ |
 | Frontend | Next.js 16 (App Router) · TypeScript · Tailwind CSS 4  |
@@ -145,7 +147,7 @@ client/
 MongoDB Atlas free cluster for the database, and two Vercel Hobby projects (API + web) from this repo.
 
 1. **Atlas**: create a free cluster, a database user, and allow network access from `0.0.0.0/0` (Vercel has no fixed IPs). Copy the connection string and add the database name: `mongodb+srv://USER:PASS@HOST/lms`.
-2. **Seed it** from your machine: `cd server`, then `MONGO_URI="<atlas uri>" npm run seed` (PowerShell: `$env:MONGO_URI="<atlas uri>"; npm run seed`).
+2. **Seed it** from your machine: `cd server`, then `MONGO_URI="<atlas uri>" npm run seed` (PowerShell: `$env:MONGO_URI="<atlas uri>"; npm run seed`). If it fails with `querySrv ECONNREFUSED`, Node can't resolve the `mongodb+srv` address through your network's DNS; run `node --import "data:text/javascript,import dns from 'node:dns'; dns.setServers(['8.8.8.8']);" --import tsx src/seed.ts` instead.
 3. **API on Vercel**: new project from this repo, root directory `server`. Env vars: `MONGO_URI`, `JWT_SECRET` (a long random string), `CLIENT_ORIGIN` (the web URL from step 4; update it after step 4 and redeploy). Check `https://<api>.vercel.app/api/health`.
 4. **Web on Vercel**: new project from this repo, root directory `client`. Env var: `NEXT_PUBLIC_API_URL=https://<api>.vercel.app/api`.
 
