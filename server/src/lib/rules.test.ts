@@ -21,7 +21,8 @@ test('age boundaries', () => {
 
 test('salary, PAN, employment', () => {
   assert.equal(runBre({ ...ok, monthlySalary: 24999 }, today).length, 1);
-  for (const pan of ['ABCDE1234', 'ABCZE1234F', 'abcpe1234f', '12345ABCDE'])
+  assert.equal(runBre({ ...ok, pan: 'ABCDE1234F' }, today).length, 0);
+  for (const pan of ['ABCDE1234', 'ABCD12345F', 'abcde1234f', '12345ABCDE', 'ABCDE1234FG'])
     assert.equal(runBre({ ...ok, pan }, today).length, 1, pan);
   assert.equal(runBre({ ...ok, employmentMode: 'self-employed' }, today).length, 0);
   assert.equal(runBre({ ...ok, employmentMode: 'unemployed' }, today).length, 1);

@@ -30,7 +30,18 @@ npm install
 npm run dev
 ```
 
-Other scripts: `server: npm test` (BRE + interest unit tests), `npm run typecheck`; `client: npm run build`, `npm run lint`.
+## Tests
+
+```bash
+cd server
+npm test            # unit: BRE rules (age/salary/PAN/employment boundaries) + interest math
+npm run test:e2e    # API end-to-end: 70 checks over auth, RBAC (401/403), BRE, uploads,
+                    # loan math, every status transition, payments, auto-close, reject path
+npm run typecheck
+cd ../client && npm run lint && npm run build
+```
+
+`test:e2e` needs only MongoDB running. It starts its own API on port 4100 against a throwaway `lms_e2e` database and drops it afterwards, so your dev data is untouched. Override with `E2E_PORT` / `E2E_MONGO_URI` (the database name must contain `e2e`).
 
 ## Login credentials
 
@@ -67,10 +78,10 @@ New borrowers can also sign up at `/signup`. Public signup only creates borrower
 | ---------- | ------------------------------------------------ |
 | Age        | not 23–50 inclusive (exact age from DOB)        |
 | Salary     | below ₹25,000 / month                            |
-| PAN        | doesn't match `^[A-Z]{3}[ABCFGHLJPT][A-Z][0-9]{4}[A-Z]$` |
+| PAN        | doesn't match `^[A-Z]{5}[0-9]{4}[A-Z]$`        |
 | Employment | `unemployed`                                     |
 
-PAN: 5 letters, 4 digits, 1 letter. The 4th character is the holder type (P = individual, C = company, H = HUF, …), so the regex is stricter than a plain `[A-Z]{5}[0-9]{4}[A-Z]`. Input is uppercased before matching.
+PAN: 5 letters, 4 digits, 1 letter (e.g. `ABCDE1234F`). Input is uppercased before matching.
 
 **Where the BRE runs:** on the server, because a client-side check can be bypassed with one curl. It runs when personal details are saved (`422` with the list of failures, nothing is stored) and again when the loan is created, since age changes over time. The client only uses native `pattern`/`min` attributes for typing feedback and displays the server's errors.
 

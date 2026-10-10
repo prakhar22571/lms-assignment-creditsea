@@ -11,7 +11,7 @@ const listByStatus = (status: LoanStatus) =>
 /** Atomic status move: only succeeds if the loan is still in `from`. */
 async function transition(req: Request, res: Response, from: LoanStatus, update: Record<string, unknown>) {
   const id = String(req.params.id);
-  const loan = await Loan.findOneAndUpdate({ _id: id, status: from }, update, { new: true });
+  const loan = await Loan.findOneAndUpdate({ _id: id, status: from }, update, { returnDocument: 'after' });
   if (loan) return res.json({ loan });
   if (await Loan.exists({ _id: id })) return res.status(409).json({ error: `Loan is no longer ${from}` });
   res.status(404).json({ error: 'Loan not found' });
@@ -101,7 +101,7 @@ router.post('/collection/:id/payments', requireRole('collection', 'admin'), asyn
       { $set: { amountPaid: newPaid } },
       { $set: { status: { $cond: [paidOff, 'CLOSED', '$status'] }, closedAt: { $cond: [paidOff, '$$NOW', '$closedAt'] } } },
     ],
-    { new: true, updatePipeline: true },
+    { returnDocument: 'after', updatePipeline: true },
   );
   if (!updated) {
     // ponytail: compensating delete instead of a transaction (standalone mongod has none); use a session on a replica set.

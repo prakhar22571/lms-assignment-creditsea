@@ -6,7 +6,8 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "seed": "tsx src/seed.ts",
-    "test": "tsx --test src/lib/rules.test.ts"
+    "test": "tsx --test src/lib/rules.test.ts",
+    "test:e2e": "tsx src/e2e.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

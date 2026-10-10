@@ -9,8 +9,8 @@ export interface Profile {
   employmentMode: EmploymentMode;
 }
 
-// 5 letters, 4 digits, 1 letter; 4th char is the holder type (P = individual, C = company, ...).
-export const PAN_REGEX = /^[A-Z]{3}[ABCFGHLJPT][A-Z][0-9]{4}[A-Z]$/;
+// 5 letters, 4 digits, 1 letter (e.g. ABCDE1234F).
+export const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
 
 // dob is a calendar date stored as UTC midnight, so read it with UTC getters.
 export function ageOn(dob: Date, today = new Date()): number {
@@ -26,7 +26,7 @@ export function runBre(p: Profile, today = new Date()): string[] {
   const age = ageOn(p.dob, today);
   if (age < 23 || age > 50) errors.push(`Age must be between 23 and 50 (you are ${age}).`);
   if (p.monthlySalary < 25000) errors.push('Monthly salary must be at least ₹25,000.');
-  if (!PAN_REGEX.test(p.pan)) errors.push('PAN is not in a valid format (e.g. ABCPE1234F).');
+  if (!PAN_REGEX.test(p.pan)) errors.push('PAN is not in a valid format (e.g. ABCDE1234F).');
   if (p.employmentMode === 'unemployed') errors.push('Unemployed applicants are not eligible.');
   return errors;
 }
