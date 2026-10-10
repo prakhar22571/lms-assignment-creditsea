@@ -4,8 +4,6 @@
  * Needs only MongoDB running. Usage: npm run test:e2e
  */
 import { spawn, execFileSync } from 'node:child_process';
-import fs from 'node:fs';
-import path from 'node:path';
 import mongoose from 'mongoose';
 
 const MONGO_URI = process.env.E2E_MONGO_URI ?? 'mongodb://127.0.0.1:27017/lms_e2e';
@@ -173,8 +171,6 @@ async function run() {
 
 if (await fetch(`${BASE}/health`).then(() => true, () => false))
   throw new Error(`Port ${PORT} is already in use; stop that process or set E2E_PORT`);
-const UPLOADS = path.resolve('uploads');
-const filesBefore = new Set(fs.existsSync(UPLOADS) ? fs.readdirSync(UPLOADS) : []);
 await dropDb();
 execFileSync(process.execPath, ['--import', 'tsx', 'src/seed.ts'], { env: { ...process.env, MONGO_URI }, stdio: 'ignore' });
 const server = spawn(process.execPath, ['--import', 'tsx', 'src/index.ts'], {
@@ -187,7 +183,6 @@ try {
 } finally {
   server.kill();
   await dropDb();
-  for (const f of fs.readdirSync(UPLOADS)) if (!filesBefore.has(f)) fs.rmSync(path.join(UPLOADS, f));
 }
 
 console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll checks passed');

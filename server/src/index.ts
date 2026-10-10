@@ -3,14 +3,12 @@ import express, { type ErrorRequestHandler } from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import multer from 'multer';
-import fs from 'node:fs';
 import authRoutes from './routes/auth.js';
-import borrowerRoutes, { UPLOAD_DIR } from './routes/borrower.js';
+import borrowerRoutes from './routes/borrower.js';
 import opsRoutes from './routes/ops.js';
 import { authenticate, requireRole } from './middleware/auth.js';
 
 for (const key of ['MONGO_URI', 'JWT_SECRET']) if (!process.env[key]) throw new Error(`${key} is not set`);
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const app = express();
 app.use(cors({ origin: process.env.CLIENT_ORIGIN ?? 'http://localhost:3000' }));
@@ -35,5 +33,11 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 app.use(errorHandler);
 
 await mongoose.connect(process.env.MONGO_URI!);
-const port = Number(process.env.PORT ?? 4000);
-app.listen(port, () => console.log(`API on http://localhost:${port}`));
+
+// On Vercel the platform serves the exported app; locally we listen ourselves.
+if (!process.env.VERCEL) {
+  const port = Number(process.env.PORT ?? 4000);
+  app.listen(port, () => console.log(`API on http://localhost:${port}`));
+}
+
+export default app;

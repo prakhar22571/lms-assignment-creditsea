@@ -21,7 +21,7 @@ const profileSchema = new Schema(
 );
 
 const fileSchema = new Schema(
-  { path: String, originalName: String, mime: String, size: Number },
+  { file: { type: Types.ObjectId, ref: 'Upload' }, originalName: String, mime: String, size: Number },
   { _id: false },
 );
 
@@ -70,7 +70,11 @@ const paymentSchema = new Schema(
   { timestamps: true },
 );
 
+// ponytail: file bytes live in Mongo (5 MB cap, 16 MB doc limit) so serverless hosts need no disk; move to object storage if volume grows.
+const uploadSchema = new Schema({ data: { type: Buffer, required: true }, mime: String }, { timestamps: true });
+
 export const User = model('User', userSchema);
 export const Loan = model('Loan', loanSchema);
 export const Payment = model('Payment', paymentSchema);
+export const Upload = model('Upload', uploadSchema);
 export type UserDoc = InferSchemaType<typeof userSchema>;

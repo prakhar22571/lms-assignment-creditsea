@@ -122,7 +122,7 @@ All routes are under `/api`. Errors look like `{ error: string, errors?: string[
 - **Loan**: `borrower → User, amount, tenureDays, interestRate, simpleInterest, totalRepayment, amountPaid, status, profile (snapshot), salarySlip, rejectionReason, reviewedBy/At, disbursedBy/At, closedAt`. The profile and slip are copied at apply time, so later edits don't change what was underwritten.
 - **Payment**: `loan → Loan, utr (unique), amount, paidOn, recordedBy → User`.
 
-Salary slips are stored on disk in `server/uploads/` under random names; the original filename is kept in the record.
+Salary slip bytes are stored in an `uploads` collection; the user and loan keep a reference plus the original filename, type and size. Keeping files in MongoDB means the API needs no disk, so it runs on serverless hosts.
 
 ## Project layout
 
@@ -139,6 +139,17 @@ client/
   components/           ui primitives, apply steps, dashboard cards
   lib/                  api client, session/RBAC hook, loan math
 ```
+
+## Deploy (free, always on)
+
+MongoDB Atlas free cluster for the database, and two Vercel Hobby projects (API + web) from this repo.
+
+1. **Atlas**: create a free cluster, a database user, and allow network access from `0.0.0.0/0` (Vercel has no fixed IPs). Copy the connection string and add the database name: `mongodb+srv://USER:PASS@HOST/lms`.
+2. **Seed it** from your machine: `cd server`, then `MONGO_URI="<atlas uri>" npm run seed` (PowerShell: `$env:MONGO_URI="<atlas uri>"; npm run seed`).
+3. **API on Vercel**: new project from this repo, root directory `server`. Env vars: `MONGO_URI`, `JWT_SECRET` (a long random string), `CLIENT_ORIGIN` (the web URL from step 4; update it after step 4 and redeploy). Check `https://<api>.vercel.app/api/health`.
+4. **Web on Vercel**: new project from this repo, root directory `client`. Env var: `NEXT_PUBLIC_API_URL=https://<api>.vercel.app/api`.
+
+Vercel caps request bodies at 4.5 MB, so on the hosted version slips between 4.5 and 5 MB are rejected by the platform before reaching the API.
 
 ## Known limits
 

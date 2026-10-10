@@ -1,21 +1,15 @@
 import { Router } from 'express';
 import multer from 'multer';
-import path from 'node:path';
-import crypto from 'node:crypto';
-import { User, Loan, ACTIVE_STATUSES } from '../models.js';
+import { User, Loan, Upload, ACTIVE_STATUSES } from '../models.js';
 import { runBre, EMPLOYMENT_MODES, type Profile, type EmploymentMode } from '../lib/bre.js';
 import { quote, AMOUNT_MIN, AMOUNT_MAX, TENURE_MIN, TENURE_MAX } from '../lib/loan.js';
 
-export const UPLOAD_DIR = path.resolve('uploads');
-const ALLOWED_MIME: Record<string, string> = { 'application/pdf': '.pdf', 'image/jpeg': '.jpg', 'image/png': '.png' };
+const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png'];
 
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: UPLOAD_DIR,
-    filename: (_req, file, cb) => cb(null, crypto.randomUUID() + ALLOWED_MIME[file.mimetype]),
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => cb(null, file.mimetype in ALLOWED_MIME),
+  fileFilter: (_req, file, cb) => cb(null, ALLOWED_MIME.includes(file.mimetype)),
 });
 
 const router = Router();
@@ -47,8 +41,9 @@ router.put('/profile', async (req, res) => {
 
 router.post('/salary-slip', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Upload a PDF, JPG or PNG file (max 5 MB)' });
-  const { filename, originalname, mimetype, size } = req.file;
-  const salarySlip = { path: filename, originalName: originalname, mime: mimetype, size };
+  const { buffer, originalname, mimetype, size } = req.file;
+  const { _id } = await Upload.create({ data: buffer, mime: mimetype });
+  const salarySlip = { file: _id, originalName: originalname, mime: mimetype, size };
   await User.updateOne({ _id: req.user!.id }, { salarySlip });
   res.json({ salarySlip: originalname });
 });
@@ -66,7 +61,7 @@ router.post('/loans', async (req, res) => {
   // Re-run BRE: the stored profile could predate a rule change, and age moves with time.
   const errors = runBre(user.profile as Profile);
   if (errors.length) return res.status(422).json({ error: 'Not eligible', errors });
-  if (!user.salarySlip?.path) return res.status(422).json({ error: 'Upload your salary slip first' });
+  if (!user.salarySlip?.file) return res.status(422).json({ error: 'Upload your salary slip first' });
   // ponytail: check-then-insert, two simultaneous applies can both pass; partial unique index on borrower if it matters.
   if (await Loan.exists({ borrower: user._id, status: { $in: ACTIVE_STATUSES } }))
     return res.status(409).json({ error: 'You already have an active loan' });
