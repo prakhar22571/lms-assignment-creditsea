@@ -5,6 +5,8 @@ Borrower portal plus an operations dashboard for a small lending flow:
 
 **Live demo:** https://lms-creditsea-web.vercel.app (API: https://lms-creditsea-api.vercel.app/api/health). Log in with any account from [Login credentials](#login-credentials).
 
+**Demo video:** https://drive.google.com/file/d/1ru1vZGBFnfn_-RweYRaIWx8UJE5PzOo6/view?usp=sharing
+
 | Layer    | Stack                                                  |
 | -------- | ------------------------------------------------------ |
 | Frontend | Next.js 16 (App Router) · TypeScript · Tailwind CSS 4  |
